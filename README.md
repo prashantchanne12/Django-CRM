@@ -1,2 +1,2 @@
 # Django-CRM
-Simple Customer Relationship Management website using Django
+Simple CRM website using Django
