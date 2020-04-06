@@ -24,8 +24,12 @@ def register(request):
 		if form.is_valid():
 			user = form.save()
 
+			# assign a group to customer at the tine of registration
 			group = Group.objects.get(name='customers')
 			user.groups.add(group)
+			Customer.objects.create(
+				user=user,
+				)
 
 			username = form.cleaned_data.get('username')
 			messages.success(request, 'Account was created for '+username)
@@ -80,18 +84,48 @@ def home(request):
 
 	return render(request, 'accounts/dashboard.html', context)
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customers'])
 def user(request):
-	context = {}
-	return render(request, 'accounts/user.html')
+	orders = request.user.customer.order_set.all()
+	# print(orders)
+		
+	total_orders = orders.count()
+	delivered = orders.filter(status='Delivered').count()
+	pending = orders.filter(status='Pending').count()
+	
+
+	context = {'orders':orders,
+	 	       'total_orders':total_orders,
+	 	       'delivered':delivered,
+	 	       'pending':pending}
+	return render(request, 'accounts/user.html', context)
+
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['customers'])
+def accountSettings(request):
+	customer = request.user.customer
+	form = CustomerForm(instance=customer)
+	context = {'form':form}
+
+	if request.method == 'POST':	
+		form = CustomerForm(request.POST, request.FILES ,instance=customer)
+		if form.is_valid():
+			form.save()
+
+	
+	return render(request, 'accounts/account_settings.html', context)
+
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['admins'])
 def products(request):
 	products = Product.objects.all()
 	return render(request, 'accounts/products.html', {'products':products})
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['admins'])
 def customers(request, pk):
 	customer = Customer.objects.get(id=pk)
 	orders = customer.order_set.all()
@@ -109,7 +143,7 @@ def customers(request, pk):
 	return render(request, 'accounts/customers.html', context)
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['admins'])
 def createOrder(request, pk): 
 	# inline formset allows us to create multiple forms in a single form
 	# inlineformset_factory takes to models : 
@@ -153,7 +187,7 @@ def updateOrder(request, pk):
 	return render(request, 'accounts/order_form.html', context)
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['admins'])
 def deleteOrder(request, pk):
 	order = Order.objects.get(id=pk)
 

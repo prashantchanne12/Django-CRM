@@ -2,6 +2,31 @@
 {% block content %}
 {% include 'accounts/status.html' %}
 
-<h3>User Profile</h3>
+<div class="col-md-7">
+		<h5>LAST 5 ORDERS</h5>
+		<hr>
+		<div class="card card-body">
+			<table class="table table-sm">
+				<tr>
+					<th>Product</th>
+					<th>Date Orderd</th>
+					<th>Status</th>
+					<th>Update</th>
+					<th>Remove</th>
+				</tr>
+
+				{% for order in orders %}
+				<tr>
+					<td>{{ order.product.name }}</td>
+					<td>{{ order.date_created }}</td>
+					<td>{{ order.status }}</td>
+					<td><a class="btn btn-sm btn-info" href="{% url 'update-order' order.id %}">Update</td>
+					<td><a class="btn btn-sm btn-danger" href="{% url 'delete-order' order.id %}">Delete</td>
+				</tr>
+			{% endfor %}
+			</table>
+		</div>
+	</div>
+
 
 {% endblock content %} 
